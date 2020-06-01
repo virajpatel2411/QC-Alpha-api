@@ -10,6 +10,7 @@ cryptography==2.9.2
 enum34==1.1.10
 Flask==1.1.2
 Flask-Cors==3.0.8
+Flask-PyMongo==2.3.0
 gunicorn==20.0.4
 hyperlink==19.0.0
 idna==2.9
@@ -26,8 +27,10 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20
 PyHamcrest==2.0.2
+pymongo==3.10.1
 pyOpenSSL==19.1.0
 pypi-install==0.0.5
+pypiwin32==223
 python-dateutil==2.8.1
 pytz==2020.1
 requests==2.23.0
