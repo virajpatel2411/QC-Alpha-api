@@ -30,7 +30,6 @@ PyHamcrest==2.0.2
 pymongo==3.10.1
 pyOpenSSL==19.1.0
 pypi-install==0.0.5
-pypiwin32==223
 python-dateutil==2.8.1
 pytz==2020.1
 requests==2.23.0
