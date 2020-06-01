@@ -5,10 +5,25 @@ from flask_cors import CORS, cross_origin
 from flask import request
 import os
 import json
-
+import pandas as pd
+from flask_pymongo import PyMongo
+import pymongo
+from scipy.stats import norm
+import datetime
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
+
+app.config["MONGO_URI"] = "mongodb://tathagat:tathagat2000@ds139844.mlab.com:39844/heroku_lns9vp7k?retryWrites=false"
+mongo = PyMongo(app)    
+
+
+# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+
+# mydb = myclient["python"]
+
+# mycol = mydb["demo1"]
+
 CORS(app)
 #app.config['CORS_HEADERS'] = 'Content-Type'
 cors=CORS(app, resources={
@@ -82,15 +97,19 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
 
   kite = KiteConnect(api_key=api_key) 
   kite.set_access_token(accessToken)
-  instrument=kite.instruments()
-  import pandas as pd
-  from scipy.stats import norm
-  df = pd.DataFrame(instrument)
   
+  y = mongo.db.instruments.find_one()
+  del(y['_id'])
+  df = pd.read_json(y["instrument"],orient='records')
+  for i in range(0,len(df['expiry'])):
+    new_val = datetime.datetime.strptime(df.expiry.loc[i],'%Y-%m-%d').date()
+    df.expiry.loc[i] = new_val
   
   Script_CE = df[(df.name==SCRIPT) & (df.expiry==Expirydate) & (df.instrument_type=='CE')]
   Script_PE = df[(df.name==SCRIPT) & (df.expiry==Expirydate) & (df.instrument_type=='PE')]
   Script_FUT = df[(df.name==SCRIPT) & (df.instrument_type=='FUT')]
+
+  
 
   Script_CE = Script_CE.sort_values(by=['strike'])
   Script_PE = Script_PE.sort_values(by=['strike'])
@@ -230,7 +249,7 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
 
   FINAL = roundoffnumbers(FINAL)
   
-
+  print(FINAL)
   JSONOBJECT = FINAL.to_json(orient='records')	
 
   return JSONOBJECT
@@ -246,7 +265,7 @@ def home():
         print(ticker)
     if 'expiry' in request.args:
         expiryTemp = str(request.args['expiry'])
-        expiry = datetime.datetime.strptime(expiryTemp,'%Y%m%d').date()
+        expiry = datetime.datetime.strptime(expiryTemp,'%Y-%m-%d').date()
         print(expiry)
     if 'strikeDistance' in request.args:
         strikeDistance = int(request.args['strikeDistance'])
@@ -266,6 +285,36 @@ def home():
 
 @app.route('/expiry', methods=['GET'])
 def home2() :
+  y = mongo.db.instruments.find_one()
+  del(y['_id'])
+  df = pd.read_json(y["instrument"],orient='records')
+  Expiry = df[(df.name=='NIFTY')].expiry.unique()
+  Expiry.sort()
+  Expiry = Expiry.tolist()
+  expiry = json.dumps(Expiry)
+  return expiry
+  
+  
+@app.route('/instruments', methods=['GET'])
+def home3() :
+
+  y = mongo.db.instruments.find_one()
+  del(y['_id'])
+  
+  todayDate = datetime.datetime.now().date()
+  
+  today = todayDate.strftime('%Y-%m-%d') 
+  
+  if(today==y['date']):
+    df = pd.read_json(y["instrument"],orient='records')
+    Expiry = df[(df.name=='NIFTY')].expiry.unique()
+    Expiry.sort()
+    Expiry = Expiry.tolist()
+    expiry = json.dumps(Expiry)
+    return expiry
+  
+  mongo.db.instruments.delete_many({})
+
   api_key = "tg48gdykr12ezopp"
   api_secret = "wgwq9kgfly6ky19j43w2g5kvxpdjb44g"
 
@@ -275,9 +324,35 @@ def home2() :
         print(accessToken)
   kite.set_access_token(accessToken)
   instrument=kite.instruments()
-  import pandas as pd
+  
+
+  
+  
   from scipy.stats import norm
   df = pd.DataFrame(instrument)
+  
+  dataTemp = df[((df.name=='NIFTY') | (df.name=='BANKNIFTY'))]
+    
+  #dataInsert = dataTemp.to_json(orient='records')
+  
+  dataInsert = dataTemp.to_dict('records')
+  
+  data = json.dumps(dataInsert, indent=4, sort_keys=True, default=str)
+  
+  todayDate = datetime.datetime.now().date()
+  
+  today = todayDate.strftime('%Y-%m-%d') 
+  
+  mydict = {"instrument":data,"date":today}
+  
+  #mycol.insert_one(mydict)
+  
+  mongo.db.instruments.insert_one(mydict)
+  
+  
+  
+  
+  
   Expiry = df[(df.name=='NIFTY')].expiry.unique()
   Expiry.sort()
   for i in range(0,len(Expiry)) :
@@ -285,8 +360,7 @@ def home2() :
   Expiry = Expiry.tolist()
   expiry = json.dumps(Expiry)
   return expiry
-  
-  
+
 
 port = int(os.environ.get('PORT',5000))
 app.run(host = '0.0.0.0', port=port)
