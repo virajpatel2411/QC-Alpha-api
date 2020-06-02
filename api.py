@@ -249,7 +249,7 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
 
   FINAL = roundoffnumbers(FINAL)
   
-  print(FINAL)
+
   JSONOBJECT = FINAL.to_json(orient='records')	
 
   return JSONOBJECT
@@ -262,20 +262,20 @@ def home():
     print("START")
     if 'ticker' in request.args:
         ticker = str(request.args['ticker'])
-        print(ticker)
+        
     if 'expiry' in request.args:
         expiryTemp = str(request.args['expiry'])
         expiry = datetime.datetime.strptime(expiryTemp,'%Y-%m-%d').date()
-        print(expiry)
+        
     if 'strikeDistance' in request.args:
         strikeDistance = int(request.args['strikeDistance'])
-        print(strikeDistance)
+        
     if 'totContracts' in request.args:
         totContracts = int(request.args['totContracts'])
-        print(totContracts)
+        
     if 'accessToken' in request.args:
         accessToken = str(request.args['accessToken'])
-        print(accessToken)
+        
     
     data = fetch_data(ticker,expiry,totContracts,strikeDistance,accessToken)
     print("END")
@@ -305,6 +305,7 @@ def home3() :
   
   today = todayDate.strftime('%Y-%m-%d') 
   
+   
   if(today==y['date']):
     df = pd.read_json(y["instrument"],orient='records')
     Expiry = df[(df.name=='NIFTY')].expiry.unique()
