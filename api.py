@@ -308,6 +308,7 @@ def home3() :
   print(today,y['date']) 
    
   if(today==y['date']):
+    print("Yes")
     df = pd.read_json(y["instrument"],orient='records')
     Expiry = df[(df.name=='NIFTY')].expiry.unique()
     Expiry.sort()
@@ -345,7 +346,7 @@ def home3() :
   
   today = todayDate.strftime('%Y-%m-%d') 
   
-  mydict = {"instrument":data,"date":"2020-06-02"}
+  mydict = {"instrument":data,"date":today}
   
   #mycol.insert_one(mydict)
   
