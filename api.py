@@ -298,24 +298,24 @@ def home2() :
 @app.route('/instruments', methods=['GET'])
 def home3() :
 
-  # y = mongo.db.instruments.find_one()
-  # del(y['_id'])
+  y = mongo.db.instruments.find_one()
+  del(y['_id'])
   
-  # todayDate = datetime.datetime.now().date()
+  todayDate = datetime.datetime.now().date()
   
-  # today = todayDate.strftime('%Y-%m-%d') 
+  today = todayDate.strftime('%Y-%m-%d') 
   
-  # print(today,y['date']) 
+  print(today,y['date']) 
    
-  # if(today==y['date']):
-    # df = pd.read_json(y["instrument"],orient='records')
-    # Expiry = df[(df.name=='NIFTY')].expiry.unique()
-    # Expiry.sort()
-    # Expiry = Expiry.tolist()
-    # expiry = json.dumps(Expiry)
-    # return expiry
+  if(today==y['date']):
+    df = pd.read_json(y["instrument"],orient='records')
+    Expiry = df[(df.name=='NIFTY')].expiry.unique()
+    Expiry.sort()
+    Expiry = Expiry.tolist()
+    expiry = json.dumps(Expiry)
+    return expiry
   
-  #mongo.db.instruments.delete_many({})
+  mongo.db.instruments.delete_many({})
 
   api_key = "tg48gdykr12ezopp"
   api_secret = "wgwq9kgfly6ky19j43w2g5kvxpdjb44g"
