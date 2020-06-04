@@ -10,7 +10,7 @@ from flask_pymongo import PyMongo
 import pymongo
 from scipy.stats import norm
 import datetime
-from MibianLib import mibian
+import mibian
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
