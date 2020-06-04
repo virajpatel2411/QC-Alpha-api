@@ -10,6 +10,7 @@ from flask_pymongo import PyMongo
 import pymongo
 from scipy.stats import norm
 import datetime
+from MibianLib import mibian
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
@@ -90,10 +91,7 @@ def get_strikes(All_Strikes , NoofContracts , LTP) : #FUNCTION TO GET +-VAL STRI
   list.sort()
   return list
 
-def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessToken) :
-
-  api_key = "tg48gdykr12ezopp"
-  api_secret = "wgwq9kgfly6ky19j43w2g5kvxpdjb44g"
+def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessToken, api_key) :
 
   kite = KiteConnect(api_key=api_key) 
   kite.set_access_token(accessToken)
@@ -195,7 +193,7 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
   RoundedFuture = round(FUT_LTP/Strikedifference)*Strikedifference
   Futprice = Script_CE[Script_CE.strike==RoundedFuture].SynFut
 
-  import mibian 
+  
   for i in Script_CE.strike :
     interestrate=0
     callprice = Script_CE.loc[Script_CE.strike==i , 'CE_Mid'].values[0]
@@ -249,7 +247,8 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
 
   FINAL = roundoffnumbers(FINAL)
   
-
+  print(FINAL['CE_IV'],FINAL['PE_IV'],FINAL['strike'])
+    
   JSONOBJECT = FINAL.to_json(orient='records')	
 
   return JSONOBJECT
@@ -276,8 +275,12 @@ def home():
     if 'accessToken' in request.args:
         accessToken = str(request.args['accessToken'])
         
+    if 'API_Key' in request.args:
+        api_key = str(request.args['API_Key'])
     
-    data = fetch_data(ticker,expiry,totContracts,strikeDistance,accessToken)
+    
+    
+    data = fetch_data(ticker,expiry,totContracts,strikeDistance,accessToken, api_key)
     print("END")
     
     
@@ -304,11 +307,9 @@ def home3() :
   todayDate = datetime.datetime.now().date()
   
   today = todayDate.strftime('%Y-%m-%d') 
-  
-  print(today,y['date']) 
+ 
    
   if(today==y['date']):
-    print("Yes")
     df = pd.read_json(y["instrument"],orient='records')
     Expiry = df[(df.name=='NIFTY')].expiry.unique()
     Expiry.sort()
@@ -318,13 +319,16 @@ def home3() :
   
   mongo.db.instruments.delete_many({})
 
-  api_key = "tg48gdykr12ezopp"
-  api_secret = "wgwq9kgfly6ky19j43w2g5kvxpdjb44g"
 
-  kite = KiteConnect(api_key=api_key) 
+
+  
   if 'accessToken' in request.args:
         accessToken = str(request.args['accessToken'])
-        print(accessToken)
+  if 'API_Key' in request.args:
+        api_key = str(request.args['API_Key'])    
+        
+        
+  kite = KiteConnect(api_key=api_key) 
   kite.set_access_token(accessToken)
   instrument=kite.instruments()
   
