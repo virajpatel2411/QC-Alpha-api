@@ -33,6 +33,188 @@ cors=CORS(app, resources={
 #def _corsify_actual_response(response):
 #    response.headers.add("Access-Control-Allow-Origin", "*")
 #    return response
+'''
+MibianLib - Options Pricing Open Source Library - http://code.mibian.net/
+Copyright (C) 2011 Yassine Maaroufi - <yassinemaaroufi@mibian.net>
+Distributed under GPLv3 - http://www.gnu.org/copyleft/gpl.html
+'''
+
+from math import log, e
+try:
+	from scipy.stats import norm
+except ImportError:
+	print('Mibian requires scipy to work properly')
+
+# WARNING: All numbers should be floats -> x = 1.0
+
+def impliedVolatility(className, args, callPrice=None, putPrice=None, high=500.0, low=0.0):
+	'''Returns the estimated implied volatility'''
+	if callPrice:
+		target = callPrice
+		restimate = eval(className)(args, volatility=high, performance=True).callPrice  
+		if restimate < target:
+			return high
+		if args[0]>args[1] + callPrice:
+			return 0.1            
+	if putPrice:
+		target = putPrice
+		restimate = eval(className)(args, volatility=high, performance=True).putPrice
+		if restimate < target:
+			return high
+		if args[1]>args[0] + putPrice:
+			return 0.1            
+	decimals = len(str(target).split('.')[1])		# Count decimals
+	for i in range(100):	# To avoid infinite loops
+		mid = (high + low) / 2
+		if mid < 0.1:
+			mid = 0.1
+		if callPrice:
+			estimate = eval(className)(args, volatility=mid, performance=True).callPrice
+		if putPrice:
+			estimate = eval(className)(args, volatility=mid, performance=True).putPrice
+		if round(estimate, decimals) == target: 
+			break
+		elif estimate > target: 
+			high = mid
+		elif estimate < target: 
+			low = mid
+	return mid
+
+
+class BS:
+	
+
+	def __init__(self, args, volatility=None, callPrice=None, putPrice=None, \
+			performance=None):
+		self.underlyingPrice = float(args[0])
+		self.strikePrice = float(args[1])
+		self.interestRate = float(args[2]) / 100
+		self.daysToExpiration = float(args[3]) / 365
+
+		for i in ['callPrice', 'putPrice', 'callDelta', 'putDelta', \
+				'callDelta2', 'putDelta2', 'callTheta', 'putTheta', \
+				'callRho', 'putRho', 'vega', 'gamma', 'impliedVolatility', \
+				'putCallParity']:
+			self.__dict__[i] = None
+		
+		if volatility:
+			self.volatility = float(volatility) / 100
+
+			self._a_ = self.volatility * self.daysToExpiration**0.5
+			self._d1_ = (log(self.underlyingPrice / self.strikePrice) + \
+					(self.interestRate + (self.volatility**2) / 2) * \
+					self.daysToExpiration) / self._a_
+			self._d2_ = self._d1_ - self._a_
+			if performance:
+				[self.callPrice, self.putPrice] = self._price()
+			else:
+				[self.callPrice, self.putPrice] = self._price()
+				[self.callDelta, self.putDelta] = self._delta()
+				[self.callDelta2, self.putDelta2] = self._delta2()
+				[self.callTheta, self.putTheta] = self._theta()
+				[self.callRho, self.putRho] = self._rho()
+				self.vega = self._vega()
+				self.gamma = self._gamma()
+				self.exerciceProbability = norm.cdf(self._d2_)
+		if callPrice:
+			self.callPrice = round(float(callPrice), 6)
+			self.impliedVolatility = impliedVolatility(\
+					self.__class__.__name__, args, callPrice=self.callPrice)
+		if putPrice and not callPrice:
+			self.putPrice = round(float(putPrice), 6)
+			self.impliedVolatility = impliedVolatility(\
+					self.__class__.__name__, args, putPrice=self.putPrice)
+		if callPrice and putPrice:
+			self.callPrice = float(callPrice)
+			self.putPrice = float(putPrice)
+			self.putCallParity = self._parity()
+
+	def _price(self):
+		'''Returns the option price: [Call price, Put price]'''
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			call = max(0.0, self.underlyingPrice - self.strikePrice)
+			put = max(0.0, self.strikePrice - self.underlyingPrice)
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			call = self.underlyingPrice * norm.cdf(self._d1_) - \
+					self.strikePrice * e**(-self.interestRate * \
+					self.daysToExpiration) * norm.cdf(self._d2_)
+			put = self.strikePrice * e**(-self.interestRate * \
+					self.daysToExpiration) * norm.cdf(-self._d2_) - \
+					self.underlyingPrice * norm.cdf(-self._d1_)
+		return [call, put]
+
+	def _delta(self):
+		'''Returns the option delta: [Call delta, Put delta]'''
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			call = 1.0 if self.underlyingPrice > self.strikePrice else 0.0
+			put = -1.0 if self.underlyingPrice < self.strikePrice else 0.0
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			call = norm.cdf(self._d1_)
+			put = -norm.cdf(-self._d1_)
+		return [call, put]
+
+	def _delta2(self):
+		'''Returns the dual delta: [Call dual delta, Put dual delta]'''
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			call = -1.0 if self.underlyingPrice > self.strikePrice else 0.0
+			put = 1.0 if self.underlyingPrice < self.strikePrice else 0.0
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			_b_ = e**-(self.interestRate * self.daysToExpiration)
+			call = -norm.cdf(self._d2_) * _b_
+			put = norm.cdf(-self._d2_) * _b_
+		return [call, put]
+
+	def _vega(self):
+		'''Returns the option vega'''
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			return 0.0
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			return self.underlyingPrice * norm.pdf(self._d1_) * \
+					self.daysToExpiration**0.5 / 100
+
+	def _theta(self):
+		'''Returns the option theta: [Call theta, Put theta]'''
+		_b_ = e**-(self.interestRate * self.daysToExpiration)
+		call = -self.underlyingPrice * norm.pdf(self._d1_) * self.volatility / \
+				(2 * self.daysToExpiration**0.5) - self.interestRate * \
+				self.strikePrice * _b_ * norm.cdf(self._d2_)
+		put = -self.underlyingPrice * norm.pdf(self._d1_) * self.volatility / \
+				(2 * self.daysToExpiration**0.5) + self.interestRate * \
+				self.strikePrice * _b_ * norm.cdf(-self._d2_)
+		return [call / 365, put / 365]
+
+	def _rho(self):
+		'''Returns the option rho: [Call rho, Put rho]'''
+		_b_ = e**-(self.interestRate * self.daysToExpiration)
+		call = self.strikePrice * self.daysToExpiration * _b_ * \
+				norm.cdf(self._d2_) / 100
+		put = -self.strikePrice * self.daysToExpiration * _b_ * \
+				norm.cdf(-self._d2_) / 100
+		return [call, put]
+
+	def _gamma(self):
+		'''Returns the option gamma'''
+		return norm.pdf(self._d1_) / (self.underlyingPrice * self._a_)
+
+	def _parity(self):
+		'''Put-Call Parity'''
+		return self.callPrice - self.putPrice - self.underlyingPrice + \
+				(self.strikePrice / \
+				((1 + self.interestRate)**self.daysToExpiration))
+
+
+
+
+
+
 
 def getltp(x,kite) : #FUNCTION TO GET LAST TRADING PRICE OF FUTURE CONTRACT
   Exchange = x['exchange']
@@ -185,40 +367,51 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
   Script_PE.PE_SyntheticFut = Script_CE.SynFut
 
   from datetime import date
-  today = (datetime.datetime.now())
-  Expirydate = datetime.datetime(Expirydate.year , Expirydate.month , Expirydate.day , 15 , 30 , 00)
+  today = (datetime.datetime.utcnow())
+  Expirydate = datetime.datetime(Expirydate.year , Expirydate.month , Expirydate.day , 10 , 00 , 00)
   Days_To_Expiry =  ((Expirydate-today).total_seconds()) / 86400
+
 
   FUT_LTP
   RoundedFuture = round(FUT_LTP/Strikedifference)*Strikedifference
   Futprice = Script_CE[Script_CE.strike==RoundedFuture].SynFut
+  Futprice = Futprice.values[0]
+
 
   
   for i in Script_CE.strike :
     interestrate=0
     callprice = Script_CE.loc[Script_CE.strike==i , 'CE_Mid'].values[0]
-    c = mibian.BS([Futprice, i , 0 , Days_To_Expiry] , callPrice = callprice)
+    c = BS([Futprice, i , 0 , Days_To_Expiry] , callPrice = callprice)
     Script_CE.loc[Script_CE.strike==i , 'CE_IV'] = c.impliedVolatility
 
   for i in Script_PE.strike :
     putprice = Script_PE.loc[Script_PE.strike==i , 'PE_Mid'].values[0]
-    c = mibian.BS([Futprice , i , 0 , Days_To_Expiry ] ,putPrice=putprice)
+    c = BS([Futprice , i , 0 , Days_To_Expiry ] ,putPrice=putprice)
     Script_PE.loc[Script_PE.strike==i , 'PE_IV'] = c.impliedVolatility
 
 
 
+
+
+
+
   for i in Script_CE.strike :
-    interestrate=0
-    Volatility = Script_CE.loc[Script_CE.strike==i , 'CE_IV'].values[0]
-    c = mibian.BS([Futprice , i , 0 , Days_To_Expiry ] ,volatility=Volatility)
-    Script_CE.loc[Script_CE.strike==i , ['CE_Delta' , 'CE_Gamma' , 'CE_Vega' , 'CE_Theta']] = [c.callDelta , c.gamma , c.vega , c.callTheta]
+          interestrate=0
+          Volatility = Script_CE.loc[Script_CE.strike==i , 'CE_IV'].values[0]
+          c = BS([Futprice , i , 0 , Days_To_Expiry ] ,volatility=Volatility)
+          Script_CE.loc[Script_CE.strike==i , ['CE_Delta' , 'CE_Gamma' , 'CE_Vega' , 'CE_Theta']] = [c.callDelta , c.gamma , c.vega , c.callTheta]
 
 
   for i in Script_PE.strike :
-    interestrate=0
-    Volatility = Script_PE.loc[Script_PE.strike==i , 'PE_IV'].values[0]
-    c = mibian.BS([Futprice , i , 0 , Days_To_Expiry ] ,volatility=Volatility)
-    Script_PE.loc[Script_PE.strike==i , ['PE_Delta' , 'PE_Gamma' , 'PE_Vega' , 'PE_Theta']] = [c.putDelta , c.gamma , c.vega , c.putTheta]
+          interestrate=0
+          Volatility = Script_PE.loc[Script_PE.strike==i , 'PE_IV'].values[0]
+          c = BS([Futprice , i , 0 , Days_To_Expiry ] ,volatility=Volatility)
+          Script_PE.loc[Script_PE.strike==i , ['PE_Delta' , 'PE_Gamma' , 'PE_Vega' , 'PE_Theta']] = [c.putDelta , c.gamma , c.vega , c.putTheta]
+
+
+
+
 
 
 
@@ -233,7 +426,7 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
   FINAL['Mnes']=0
 
   for i in FINAL.strike :
-    FINAL.loc[FINAL.strike==i  , 'Mnes'] = round((i*100)/Futprice.values[0],1)
+    FINAL.loc[FINAL.strike==i  , 'Mnes'] = round((i*100)/Futprice,1)
     if(i>=RoundedFuture) :
       FINAL.loc[FINAL.strike==i , 'Smile'] = FINAL[FINAL.strike==i].CE_IV
 
@@ -244,10 +437,8 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
   FINAL.loc[FINAL.strike==RoundedFuture, 'Smile'] = (FINAL[FINAL.strike==RoundedFuture].CE_IV + FINAL[FINAL.strike==RoundedFuture].PE_IV)/2
   ColumnsList = [ 'CE_OI' , 'CE_Vol' , 'CE_Bid' , 'CE_Offer' , 'CE_Vega' , 'CE_Theta' , 'CE_Gamma' , 'CE_Delta' , 'CE_IV' , 'SynFut'  , 'strike' , 'Mnes', 'Smile' , 'PE_IV' , 'PE_Delta' , 'PE_Gamma' , 'PE_Theta' , 'PE_Vega'  , 'PE_Bid' , 'PE_Offer' , 'PE_Vol' , 'PE_OI']
   FINAL = FINAL[ColumnsList]
-
   FINAL = roundoffnumbers(FINAL)
-  
-  print(FINAL['CE_IV'],FINAL['PE_IV'],FINAL['strike'])
+
     
   JSONOBJECT = FINAL.to_json(orient='records')	
 
