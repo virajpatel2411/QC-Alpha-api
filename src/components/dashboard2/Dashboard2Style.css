@@ -1,0 +1,31 @@
+.NavbarImage {
+  width: 40px;
+  height: 40px;
+}
+
+.containerOption {
+  padding: 10px 0 !important; 
+  margin: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  background-color: #202020;
+}
+
+.containerTable {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  background: white !important;
+}
+
+.AddedColumnMessage {
+  margin-top: 20px;
+  margin-left: 100px;
+  color: green;
+  font-weight: bold;
+}
+
+.CenterRow {
+  background: rgb(255, 158, 122);
+}

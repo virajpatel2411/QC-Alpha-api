@@ -1,0 +1,32 @@
+.PrimaryButton {
+  display: inline-block;
+  padding: 10px;
+  margin: 70px 50px;
+  width: 200px;
+  color: white;
+  font-size: 25px;
+  border-radius: 10px;
+  position: relative;
+  background: linear-gradient(to right, #0171e9 0%, #33CCFF 100%);
+}
+
+.CenterHome {
+  margin: auto;
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+}
+
+.ImageHome {
+  display: inline-block;
+  filter: brightness(120%);
+}
+
+.TitleHome {
+  display: inline-block;
+  font-size: 70px;
+  color: white;
+  margin: 15px;
+  vertical-align: -12px;
+}

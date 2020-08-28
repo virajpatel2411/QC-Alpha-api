@@ -1,0 +1,202 @@
+.containerOption {
+  padding: 10px 0 !important; 
+  margin: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  background-color: #202020;
+}
+
+.containerTable {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  background: white !important;
+}
+
+.NavbarImage {
+  width: 40px;
+  height: 40px;
+}
+
+.dropdown-toggle:after { content: none !important}
+
+.img {
+  border-radius: 50%;
+}
+
+.optionMenuImage {
+  height: 45px;
+  width: 45px;
+  border-radius: 50%;
+}
+
+#expiryDropdownMenu {
+  min-width: 150px;
+}
+
+#tickerDropdownMenu {
+  min-width: 150px;
+}
+
+#strikeDistanceDropdownMenu {
+  min-width: 150px;
+}
+
+#totContractsDropdownMenu {
+  min-width: 150px;
+}
+
+.table-bordered td, .table-bordered th {
+  border: 1px solid darkgray !important;
+}
+
+#borderTopLeftID {
+  border-top: 3px solid black;
+  border-left: 3px solid black;
+}
+
+#borderBottomLeftID {
+  border-bottom: 3px solid black;
+  border-left: 3px solid black;
+}
+
+#borderTopRightID {
+  border-top: 3px solid black;
+  border-right: 3px solid black;
+}
+
+#borderBottomRightID {
+  border-bottom: 3px solid black;
+  border-right: 3px solid black;
+}
+
+#borderTopID {
+  border-top: 3px solid black;
+}
+
+#borderBottomID {
+  border-bottom: 3px solid black;
+}
+
+#borderLeftID {
+  border-left: 3px solid black;
+}
+
+#borderRightID {
+  border-right: 3px solid black;
+}
+
+.callClass {
+  background: rgb(78, 221, 78);
+}
+
+.putClass {
+  background: rgb(255, 147, 108);
+}
+
+/*.synFutClass {
+  background: ;
+}
+
+.strikeClass {
+  background: ;
+}
+
+.mnesClass {
+  background: ;
+}
+
+.smileClass {
+background: ;
+}*/
+
+.tableColumn-1 {
+  background: rgb(189, 255, 189);
+}
+
+.tableColumn-2 {
+  background: rgb(189, 255, 189);
+}
+
+.tableColumn-3 {
+  background: rgb(189, 255, 189);
+}
+
+.tableColumn-4 {
+  background: rgb(189, 255, 189);
+}
+
+.tableColumn-5 {
+  background: rgb(189, 255, 189);
+}
+
+.tableColumn-6 {
+  background: rgb(189, 255, 189);
+}
+
+.tableColumn-7 {
+  background: rgb(189, 255, 189);
+}
+
+.tableColumn-8 {
+  background: rgb(189, 255, 189);
+}
+
+.tableColumn-9 {
+  background: rgb(189, 255, 189);
+}
+
+/*.tableColumn-10 {
+  background: ;
+}
+
+.tableColumn-11 {
+  background: ;
+}
+
+.tableColumn-12 {
+  background: ;
+}
+
+.tableColumn-13 {
+  background: ;
+}*/
+
+.tableColumn-14 {
+  background: rgb(255, 196, 174) ;
+}
+
+.tableColumn-15 {
+  background: rgb(255, 196, 174);
+}
+
+.tableColumn-16 {
+  background: rgb(255, 196, 174);
+}
+
+.tableColumn-17 {
+  background:rgb(255, 196, 174) ;
+}
+
+.tableColumn-18 {
+  background: rgb(255, 196, 174);
+}
+
+.tableColumn-19 {
+  background: rgb(255, 196, 174);
+}
+
+.tableColumn-20 {
+  background: rgb(255, 196, 174);
+}
+
+.tableColumn-21 {
+  background: rgb(255, 196, 174);
+}
+
+.tableColumn-22 {
+  background: rgb(255, 196, 174);
+}
+
+
