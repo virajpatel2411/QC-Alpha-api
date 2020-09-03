@@ -276,10 +276,15 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
 
   kite = KiteConnect(api_key=api_key) 
   kite.set_access_token(accessToken)
+      
+  instrument=kite.instruments()
   
-  y = mongo.db.instruments.find_one()
-  del(y['_id'])
-  df = pd.read_json(y["instrument"],orient='records')
+
+  
+  
+  from scipy.stats import norm
+  df = pd.DataFrame(instrument)
+  
   for i in range(0,len(df['expiry'])):
     new_val = datetime.datetime.strptime(df.expiry.loc[i],'%Y-%m-%d').date()
     df.expiry.loc[i] = new_val
@@ -478,11 +483,27 @@ def home():
 
 @app.route('/expiry', methods=['GET'])
 def home2() :
-  y = mongo.db.instruments.find_one()
-  del(y['_id'])
-  df = pd.read_json(y["instrument"],orient='records')
+  #y = mongo.db.instruments.find_one()
+  #del(y['_id'])
+  #df = pd.read_json(y["instrument"],orient='records')
+  
+  if 'accessToken' in request.args:
+        accessToken = str(request.args['accessToken'])
+  if 'API_Key' in request.args:
+        api_key = str(request.args['API_Key'])    
+        
+        
+  kite = KiteConnect(api_key=api_key) 
+  kite.set_access_token(accessToken)
+  instrument=kite.instruments()
+  
+  from scipy.stats import norm
+  df = pd.DataFrame(instrument)
+  
   Expiry = df[(df.name=='NIFTY')].expiry.unique()
   Expiry.sort()
+  for i in range(0,len(Expiry)) :
+        Expiry[i] = Expiry[i].strftime('%Y-%m-%d')
   Expiry = Expiry.tolist()
   expiry = json.dumps(Expiry)
   return expiry
@@ -490,26 +511,6 @@ def home2() :
   
 @app.route('/instruments', methods=['GET'])
 def home3() :
-
-  y = mongo.db.instruments.find_one()
-  del(y['_id'])
-  
-  todayDate = datetime.datetime.now().date()
-  
-  today = todayDate.strftime('%Y-%m-%d') 
- 
-   
-  if(today==y['date']):
-    df = pd.read_json(y["instrument"],orient='records')
-    Expiry = df[(df.name=='NIFTY')].expiry.unique()
-    Expiry.sort()
-    Expiry = Expiry.tolist()
-    expiry = json.dumps(Expiry)
-    return expiry
-  
-  mongo.db.instruments.delete_many({})
-
-
 
   
   if 'accessToken' in request.args:
@@ -527,26 +528,6 @@ def home3() :
   
   from scipy.stats import norm
   df = pd.DataFrame(instrument)
-  
-  dataTemp = df[((df.name=='NIFTY') | (df.name=='BANKNIFTY'))]
-    
-  #dataInsert = dataTemp.to_json(orient='records')
-  
-  dataInsert = dataTemp.to_dict('records')
-  
-  data = json.dumps(dataInsert, indent=4, sort_keys=True, default=str)
-  
-  todayDate = datetime.datetime.now().date()
-  
-  today = todayDate.strftime('%Y-%m-%d') 
-  
-  mydict = {"instrument":data,"date":today}
-  
-  #mycol.insert_one(mydict)
-  
-  mongo.db.instruments.insert_one(mydict)
-  
-  
   
   
   
