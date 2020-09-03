@@ -282,9 +282,9 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
   from scipy.stats import norm
   df = pd.DataFrame(instrument)
   
-  for i in range(0,len(df['expiry'])):
-    new_val = datetime.datetime.strptime(df.expiry.loc[i],'%Y-%m-%d').date()
-    df.expiry.loc[i] = new_val
+  #for i in range(0,len(df['expiry'])):
+    #new_val = datetime.datetime.strptime(str(df.expiry.loc[i]),'%Y-%m-%d').date()
+    #df.expiry.loc[i] = new_val
   
   Script_CE = df[(df.name==SCRIPT) & (df.expiry==Expirydate) & (df.instrument_type=='CE')]
   Script_PE = df[(df.name==SCRIPT) & (df.expiry==Expirydate) & (df.instrument_type=='PE')]
