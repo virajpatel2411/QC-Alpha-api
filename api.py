@@ -14,9 +14,6 @@ import datetime
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
-app.config["MONGO_URI"] = "mongodb+srv://qcalpha:qcalpha123@cluster0.tpfew.mongodb.net/qcalpha?retryWrites=true&w=majority"
-mongo = PyMongo(app)    
-
 
 # myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 
