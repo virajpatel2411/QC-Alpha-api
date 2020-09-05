@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
 
 import flask
 import datetime
@@ -18,7 +13,6 @@ from scipy.stats import norm
 import os
 import re
 
-# In[2]:
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 CORS(app)
@@ -26,13 +20,6 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 cors=CORS(app, resources={
            r"/*" : { "origin" : "*"}	
 })
-#def _corsify_actual_response(response):
-#    response.headers.add("Access-Control-Allow-Origin", "*")
-#    return response
-
-
-# In[3]:
-
 
 def getltp(x,kite) : #FUNCTION TO GET LAST TRADING PRICE OF FUTURE CONTRACT
     Exchange = x['exchange']
@@ -40,8 +27,6 @@ def getltp(x,kite) : #FUNCTION TO GET LAST TRADING PRICE OF FUTURE CONTRACT
     Symbol = Exchange + ':' + Symbol
     return kite.ltp([Symbol])[Symbol]['last_price']
 
-
-# In[4]:
 
 
 def roundoffnumbers(FINAL) :
@@ -51,10 +36,6 @@ def roundoffnumbers(FINAL) :
     #FINAL['PE_Offer'] = round(FINAL['PE_Offer'] * 10)/10
     
     return FINAL
-
-
-# In[5]:
-
 
 def get_strikes(All_Strikes , NoofContracts , LTP) : #FUNCTION TO GET +-VAL STRIKES FROM ATM
     list=[]
@@ -79,9 +60,6 @@ def get_strikes(All_Strikes , NoofContracts , LTP) : #FUNCTION TO GET +-VAL STRI
     list.sort()
     
     return list
-
-
-# In[6]:
 
 
 class Straddle() : 
@@ -196,19 +174,10 @@ class CallRatio() :
                 FINAL[columnName][index] = FINAL['CE'][index+multiplier]*ratio_denominator - FINAL['CE'][index]*ratio_numerator
 
 
-# In[ ]:
-
-
-
-
-
-# In[7]:
-
 
 def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessToken, strategies , api_key) :
     
-    #api_key = "tg48gdykr12ezopp"
-    #api_secret = "wgwq9kgfly6ky19j43w2g5kvxpdjb44g"
+    
 
     kite = KiteConnect(api_key=api_key) 
     kite.set_access_token(accessToken)
@@ -285,8 +254,7 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
                 'putRatio' : PutRatio(), 'callRatio' : CallRatio()}
     
     for strategy,parameters in strategies.items() :
-        #print(strategy)
-        #print(parameters)
+
         temp = re.compile("([a-zA-Z]+)([0-9]+)") 
         strategyName = temp.match(strategy).groups()[0]
         if(strategyName == "IF"):
@@ -305,10 +273,7 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
             strategyName = "callRatio"
         
         registry[strategyName].operate(FINAL, parameters)
-        #print(strategy, parameters)
-        #for i in parameters:
-        #    print(parameters)
-        #    registry[strategy].operate(FINAL, i)
+        registry[strategy].operate(FINAL, i)
     
     JSONOBJECT = FINAL.to_json(orient='records')
     return JSONOBJECT
@@ -319,10 +284,7 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
 
 @app.route('/expiry', methods=['GET'])
 def home2() :
-    #api_key = "tg48gdykr12ezopp"
-    #api_secret = "wgwq9kgfly6ky19j43w2g5kvxpdjb44g"
 
-    
     if 'accessToken' in request.args:
         accessToken = str(request.args['accessToken'])
         print(accessToken)
@@ -344,9 +306,6 @@ def home2() :
     Expiry = Expiry.tolist()
     expiry = json.dumps(Expiry)
     return expiry
-
-
-# In[9]:
 
 
 @app.route('/strategies', methods=['GET'])
@@ -385,30 +344,4 @@ def home():
     
 port = int(os.environ.get('PORT',5000))
 app.run(host = '0.0.0.0', port=port)
-
-
-# In[10]:
-
-
-#strategies = {
-#   'strangle' : [[1],[2]]
-#}
-
-
-# In[11]:
-
-
-#x = fetch_data("NIFTY", datetime.date(2020,8,20), 20, 50, "Dsn7nhMlhdrMPxcfDQtVJkPJjmkXezqB", strategies)
-
-
-# In[12]:
-
-
-#x
-
-
-# In[ ]:
-
-#Dsn7nhMlhdrMPxcfDQtVJkPJjmkXezqB - 21-8-2020
-
 
