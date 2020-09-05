@@ -14,13 +14,6 @@ import datetime
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
-
-# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-
-# mydb = myclient["python"]
-
-# mycol = mydb["demo1"]
-
 CORS(app)
 #app.config['CORS_HEADERS'] = 'Content-Type'
 cors=CORS(app, resources={
@@ -281,10 +274,7 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
   
   from scipy.stats import norm
   df = pd.DataFrame(instrument)
-  
-  #for i in range(0,len(df['expiry'])):
-    #new_val = datetime.datetime.strptime(str(df.expiry.loc[i]),'%Y-%m-%d').date()
-    #df.expiry.loc[i] = new_val
+ 
   
   Script_CE = df[(df.name==SCRIPT) & (df.expiry==Expirydate) & (df.instrument_type=='CE')]
   Script_PE = df[(df.name==SCRIPT) & (df.expiry==Expirydate) & (df.instrument_type=='PE')]
@@ -446,7 +436,6 @@ def fetch_data(SCRIPT , Expirydate , NoofContracts , Strikedifference , accessTo
   return JSONOBJECT
 
 
-#@cross_origin()
 @app.route('/quotes', methods=['GET'])
 def home():
 
@@ -480,9 +469,6 @@ def home():
 
 @app.route('/expiry', methods=['GET'])
 def home2() :
-  #y = mongo.db.instruments.find_one()
-  #del(y['_id'])
-  #df = pd.read_json(y["instrument"],orient='records')
   
   if 'accessToken' in request.args:
         accessToken = str(request.args['accessToken'])
